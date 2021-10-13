@@ -339,6 +339,8 @@ func newTestStateService(t *testing.T) *state.Service {
 		Path:     testDatadirPath,
 		LogLevel: log.LvlInfo,
 	}
+
+	// Mock this
 	stateSrvc := state.NewService(config)
 	stateSrvc.UseMemDB()
 
