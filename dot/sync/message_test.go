@@ -47,7 +47,7 @@ func TestService_CreateBlockResponse_MaxSize(t *testing.T) {
 		RequestedData: 3,
 		StartingBlock: *start,
 		EndBlockHash:  nil,
-		Direction:     0,
+		Direction:     network.Ascending,
 		Max:           nil,
 	}
 
@@ -62,7 +62,7 @@ func TestService_CreateBlockResponse_MaxSize(t *testing.T) {
 		RequestedData: 3,
 		StartingBlock: *start,
 		EndBlockHash:  nil,
-		Direction:     0,
+		Direction:     network.Ascending,
 		Max:           &max,
 	}
 
@@ -87,7 +87,7 @@ func TestService_CreateBlockResponse_StartHash(t *testing.T) {
 		RequestedData: 3,
 		StartingBlock: *start,
 		EndBlockHash:  nil,
-		Direction:     0,
+		Direction:     network.Ascending,
 		Max:           nil,
 	}
 
@@ -100,9 +100,9 @@ func TestService_CreateBlockResponse_StartHash(t *testing.T) {
 
 func TestService_CreateBlockResponse_Descending(t *testing.T) {
 	s := newTestSyncer(t)
-	addTestBlocksToState(t, int(maxResponseSize), s.blockState)
+	addTestBlocksToState(t, int(maxResponseSize+1), s.blockState)
 
-	startHash, err := s.blockState.GetHashByNumber(big.NewInt(1))
+	startHash, err := s.blockState.GetHashByNumber(big.NewInt(128))
 	require.NoError(t, err)
 
 	start, err := variadic.NewUint64OrHash(startHash)
@@ -112,7 +112,7 @@ func TestService_CreateBlockResponse_Descending(t *testing.T) {
 		RequestedData: 3,
 		StartingBlock: *start,
 		EndBlockHash:  nil,
-		Direction:     1,
+		Direction:     network.Descending,
 		Max:           nil,
 	}
 
@@ -172,7 +172,7 @@ func TestService_CreateBlockResponse(t *testing.T) {
 				RequestedData: 3,
 				StartingBlock: *start,
 				EndBlockHash:  &endHash,
-				Direction:     0,
+				Direction:     network.Ascending,
 				Max:           nil,
 			},
 			expectedMsgValue: &network.BlockResponseMessage{
@@ -191,7 +191,7 @@ func TestService_CreateBlockResponse(t *testing.T) {
 				RequestedData: 1,
 				StartingBlock: *start,
 				EndBlockHash:  &endHash,
-				Direction:     0,
+				Direction:     network.Ascending,
 				Max:           nil,
 			},
 			expectedMsgValue: &network.BlockResponseMessage{
@@ -210,7 +210,7 @@ func TestService_CreateBlockResponse(t *testing.T) {
 				RequestedData: 4,
 				StartingBlock: *start,
 				EndBlockHash:  &endHash,
-				Direction:     0,
+				Direction:     network.Ascending,
 				Max:           nil,
 			},
 			expectedMsgValue: &network.BlockResponseMessage{
@@ -230,7 +230,7 @@ func TestService_CreateBlockResponse(t *testing.T) {
 				RequestedData: 8,
 				StartingBlock: *start,
 				EndBlockHash:  &endHash,
-				Direction:     0,
+				Direction:     network.Ascending,
 				Max:           nil,
 			},
 			expectedMsgValue: &network.BlockResponseMessage{

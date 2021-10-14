@@ -79,22 +79,26 @@ func (s *Service) CreateBlockResponse(blockRequest *network.BlockRequestMessage)
 			return nil, fmt.Errorf("failed to get end block %s for request: %w", endHash, err)
 		}
 	} else {
-		endNumber := big.NewInt(0).Add(startHeader.Number, big.NewInt(int64(respSize-1)))
-		bestBlockNumber, err := s.blockState.BestBlockNumber()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get best block %d for request: %w", bestBlockNumber, err)
+		switch req.Direction {
+		case network.Ascending:
+			endNumber := big.NewInt(0).Add(startHeader.Number, big.NewInt(int64(respSize-1)))
+			bestBlockNumber, err := s.blockState.BestBlockNumber()
+			if err != nil {
+				return nil, fmt.Errorf("failed to get best block %d for request: %w", bestBlockNumber, err)
+			}
+
+			if endNumber.Cmp(bestBlockNumber) == 1 {
+				endNumber = bestBlockNumber
+			}
+
+			endBlock, err := s.blockState.GetBlockByNumber(endNumber)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get end block %d for request: %w", endNumber, err)
+			}
+			endHeader = &endBlock.Header
+			endHash = endHeader.Hash()
 		}
 
-		if endNumber.Cmp(bestBlockNumber) == 1 {
-			endNumber = bestBlockNumber
-		}
-
-		endBlock, err := s.blockState.GetBlockByNumber(endNumber)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get end block %d for request: %w", endNumber, err)
-		}
-		endHeader = &endBlock.Header
-		endHash = endHeader.Hash()
 	}
 
 	logger.Debug("handling BlockRequestMessage", "start", startHeader.Number, "end", endHeader.Number, "startHash", startHash, "endHash", endHash)
