@@ -19,6 +19,7 @@ package modules
 import (
 	"github.com/ChainSafe/gossamer/dot/types"
 	"github.com/ChainSafe/gossamer/lib/common"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"reflect"
@@ -27,6 +28,8 @@ import (
 
 func TestChainModule_GetBlock(t *testing.T) {
 	mockBlockAPI := NewMockBlockAPI()
+
+	mockBlockAPI.On("GetBlockByHash", mock.Anything).Return(&types.Block{}, nil)
 
 	bhash, err := common.HexToHash("0xea374832a2c3997280d2772c10e6e5b0b493ccd3d09c0ab14050320e34076c2c")
 	require.NoError(t, err)

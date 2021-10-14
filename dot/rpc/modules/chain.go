@@ -89,12 +89,12 @@ func (cm *ChainModule) GetBlock(r *http.Request, req *ChainHashRequest, res *Cha
 	hash := cm.hashLookup(req)
 	block, err := cm.blockAPI.GetBlockByHash(hash)
 	if err != nil {
-		fmt.Println("err ", err)
 		return err
 	}
 
+	fmt.Println("block: ", block)
 	// Block is nil, can I use mock here?
-
+	fmt.Println("block: ")
 	res.Block.Header, err = HeaderToJSON(block.Header)
 	if err != nil {
 		return err
