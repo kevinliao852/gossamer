@@ -73,6 +73,7 @@ func (s *tipSyncer) handleWorkerResult(res *worker) (*worker, error) {
 	if errors.Is(res.err.err, errUnknownParent) {
 		// handleTick will handle the errUnknownParent case
 		// TODO: determine if handleTick is working??
+
 		w := &worker{
 			startHash:    res.startHash,
 			startNumber:  res.startNumber,
