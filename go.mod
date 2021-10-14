@@ -40,6 +40,7 @@ require (
 	github.com/perlin-network/life v0.0.0-20191203030451-05c0e0f7eaea
 	github.com/stretchr/testify v1.7.0
 	github.com/urfave/cli v1.22.1
+	github.com/vektra/mockery/v2 v2.9.4 // indirect
 	github.com/wasmerio/go-ext-wasm v0.3.2-0.20200326095750-0a32be6068ec
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
