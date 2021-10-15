@@ -123,8 +123,7 @@ func TestService_CreateBlockResponse_Descending(t *testing.T) {
 	require.Equal(t, big.NewInt(1), resp.BlockData[127].Number())
 }
 
-// tests the ProcessBlockRequestMessage method
-func TestService_CreateBlockResponse(t *testing.T) {
+func TestService_CreateBlockResponse_Many(t *testing.T) {
 	s := newTestSyncer(t)
 	addTestBlocksToState(t, 2, s.blockState)
 
