@@ -128,21 +128,11 @@ func (s *Service) handleAscendingRequest(req *network.BlockRequestMessage) (*net
 
 	// start hash provided, need to determine end hash that is descendant of start hash
 	if startHash != nil {
-		logger.Debug("before checkOrGetDescendantHash",
-			"startHash", *startHash,
-			"endHash", endHash,
-			"endNumber", endNumber,
-		)
-
 		eh, err := s.checkOrGetDescendantHash(*startHash, endHash, big.NewInt(int64(endNumber)))
 		endHash = &eh
 		if err != nil {
 			return nil, err
 		}
-
-		logger.Debug("after checkOrGetDescendantHash",
-			"endHash", endHash,
-		)
 	}
 
 	if startHash == nil && endHash == nil {
@@ -343,7 +333,7 @@ func (s *Service) checkOrGetDescendantHash(ancestor common.Hash, descendant *com
 		descendant = &hash
 	}
 
-	logger.Debug("determined descendant",
+	logger.Trace("determined descendant",
 		"ancestor", ancestor,
 		"descendant", *descendant,
 		"number", descendantNumber,
