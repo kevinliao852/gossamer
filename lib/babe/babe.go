@@ -34,7 +34,8 @@ import (
 )
 
 var (
-	logger log.Logger
+	logger            log.Logger
+	firstBlockTimeout = time.Minute
 )
 
 // Service contains the VRF keys for the validator, as well as BABE configuation data
@@ -58,7 +59,7 @@ type Service struct {
 	blockImportHandler BlockImportHandler
 
 	// BABE authority keypair
-	keypair *sr25519.Keypair // TODO: change to BABE keystore
+	keypair *sr25519.Keypair // TODO: change to BABE keystore (#1864)
 
 	// Epoch configuration data
 	slotDuration time.Duration
@@ -72,22 +73,18 @@ type Service struct {
 
 // ServiceConfig represents a BABE configuration
 type ServiceConfig struct {
-	LogLvl               log.Lvl
-	BlockState           BlockState
-	StorageState         StorageState
-	TransactionState     TransactionState
-	EpochState           EpochState
-	BlockImportHandler   BlockImportHandler
-	Keypair              *sr25519.Keypair
-	Runtime              runtime.Instance
-	AuthData             []types.Authority
-	IsDev                bool
-	ThresholdNumerator   uint64 // for development purposes
-	ThresholdDenominator uint64 // for development purposes
-	SlotDuration         uint64 // for development purposes; in milliseconds
-	EpochLength          uint64 // for development purposes; in slots
-	Authority            bool
-	Lead                 bool
+	LogLvl             log.Lvl
+	BlockState         BlockState
+	StorageState       StorageState
+	TransactionState   TransactionState
+	EpochState         EpochState
+	BlockImportHandler BlockImportHandler
+	Keypair            *sr25519.Keypair
+	Runtime            runtime.Instance
+	AuthData           []types.Authority
+	IsDev              bool
+	Authority          bool
+	Lead               bool
 }
 
 // NewService returns a new Babe Service using the provided VRF keys and runtime
@@ -121,7 +118,6 @@ func NewService(cfg *ServiceConfig) (*Service, error) {
 		blockState:         cfg.BlockState,
 		storageState:       cfg.StorageState,
 		epochState:         cfg.EpochState,
-		epochLength:        cfg.EpochLength,
 		keypair:            cfg.Keypair,
 		transactionState:   cfg.TransactionState,
 		slotToProof:        make(map[uint64]*VrfOutputAndProof),
@@ -169,54 +165,23 @@ func (b *Service) setupParameters(cfg *ServiceConfig) error {
 	}
 
 	b.epochData.randomness = epochData.Randomness
+	b.epochData.authorities = epochData.Authorities
+	b.slotDuration, err = b.epochState.GetSlotDuration()
+	if err != nil {
+		return err
+	}
+
+	b.epochLength, err = b.epochState.GetEpochLength()
+	if err != nil {
+		return err
+	}
 
 	configData, err := b.epochState.GetLatestConfigData()
 	if err != nil {
 		return err
 	}
 
-	// if slot duration is set via the config file, overwrite the runtime value
-	switch {
-	case cfg.SlotDuration > 0 && cfg.IsDev: // TODO: remove this, needs to be set via runtime
-		b.slotDuration, err = time.ParseDuration(fmt.Sprintf("%dms", cfg.SlotDuration))
-	case cfg.SlotDuration > 0 && !cfg.IsDev:
-		err = errors.New("slot duration modified in config for non-dev chain")
-	default:
-		b.slotDuration, err = b.epochState.GetSlotDuration()
-	}
-	if err != nil {
-		return err
-	}
-
-	switch {
-	case cfg.EpochLength != 0 && cfg.IsDev: // TODO: remove this, needs to be set via runtime
-		b.epochLength = cfg.EpochLength
-	case cfg.EpochLength > 0 && !cfg.IsDev:
-		err = errors.New("epoch length modified in config for non-dev chain")
-	default:
-		b.epochLength, err = b.epochState.GetEpochLength()
-	}
-	if err != nil {
-		return err
-	}
-
-	switch {
-	case cfg.AuthData != nil && cfg.IsDev: // TODO: remove this, needs to be set via runtime
-		b.epochData.authorities = cfg.AuthData
-	case cfg.AuthData != nil && !cfg.IsDev:
-		return errors.New("authority data modified in config for non-dev chain")
-	default:
-		b.epochData.authorities = epochData.Authorities
-	}
-
-	switch {
-	case cfg.ThresholdDenominator != 0 && cfg.IsDev: // TODO: remove this, needs to be set via runtime
-		b.epochData.threshold, err = CalculateThreshold(cfg.ThresholdNumerator, cfg.ThresholdDenominator, len(b.epochData.authorities))
-	case cfg.ThresholdDenominator != 0 && !cfg.IsDev:
-		err = errors.New("threshold modified in config for non-dev chain")
-	default:
-		b.epochData.threshold, err = CalculateThreshold(configData.C1, configData.C2, len(b.epochData.authorities))
-	}
+	b.epochData.threshold, err = CalculateThreshold(configData.C1, configData.C2, len(b.epochData.authorities))
 	if err != nil {
 		return err
 	}
@@ -238,26 +203,34 @@ func (b *Service) Start() error {
 	go func() {
 		// if we aren't leading node, wait for first block
 		if !b.lead {
-			b.waitForFirstBlock()
+			if err := b.waitForFirstBlock(); err != nil {
+				logger.Crit("failed to start BABE", "error", err)
+			}
 		}
+
 		b.initiate()
 	}()
+
 	return nil
 }
 
-func (b *Service) waitForFirstBlock() {
+func (b *Service) waitForFirstBlock() error {
 	ch := b.blockState.GetImportedBlockNotifierChannel()
 	defer b.blockState.FreeImportedBlockNotifierChannel(ch)
+
+	timeout := time.After(firstBlockTimeout)
 
 	// loop until block 1
 	for {
 		select {
 		case block := <-ch:
 			if block != nil && block.Header.Number.Int64() > 0 {
-				return
+				return nil
 			}
+		case <-timeout:
+			return errFirstBlockTimeout
 		case <-b.ctx.Done():
-			return
+			return nil
 		}
 	}
 }
