@@ -17,8 +17,8 @@
 package polkadot
 
 import (
+	"github.com/ChainSafe/gossamer/internal/log"
 	"github.com/ChainSafe/gossamer/lib/runtime/wasmer"
-	log "github.com/ChainSafe/log15"
 )
 
 var (
@@ -34,7 +34,7 @@ var (
 	DefaultBasePath = string("~/.gossamer/polkadot")
 
 	// DefaultLvl is the default log level
-	DefaultLvl = log.LvlInfo
+	DefaultLvl = log.LevelInfo
 
 	// DefaultPruningMode is the default pruning mode
 	DefaultPruningMode = "archive"

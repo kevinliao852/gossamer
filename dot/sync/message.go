@@ -97,7 +97,8 @@ func (s *Service) CreateBlockResponse(blockRequest *network.BlockRequestMessage)
 		endHash = endHeader.Hash()
 	}
 
-	logger.Debug("handling BlockRequestMessage", "start", startHeader.Number, "end", endHeader.Number, "startHash", startHash, "endHash", endHash)
+	logger.Debug(fmt.Sprintf("handling BlockRequestMessage from start block number %s (hash %s) to end block number %s (hash %s)",
+		startHeader.Number, startHash, endHeader.Number, endHash))
 
 	responseData := []*types.BlockData{}
 
@@ -122,7 +123,8 @@ func (s *Service) CreateBlockResponse(blockRequest *network.BlockRequestMessage)
 		return nil, errors.New("invalid BlockRequest direction")
 	}
 
-	logger.Debug("sending BlockResponseMessage", "start", startHeader.Number, "end", endHeader.Number)
+	logger.Debug(fmt.Sprintf("sending BlockResponseMessage from start block number %s to end block number %s",
+		startHeader.Number, endHeader.Number))
 	return &network.BlockResponseMessage{
 		BlockData: responseData,
 	}, nil
@@ -145,14 +147,14 @@ func (s *Service) getBlockData(num *big.Int, requestedData byte) (*types.BlockDa
 	if (requestedData & network.RequestedDataHeader) == 1 {
 		blockData.Header, err = s.blockState.GetHeader(hash)
 		if err != nil {
-			logger.Debug("failed to get header for block", "number", num, "hash", hash, "error", err)
+			logger.Debug(fmt.Sprintf("failed to get header for block number %s with hash %s: %s", num, hash, err))
 		}
 	}
 
 	if (requestedData&network.RequestedDataBody)>>1 == 1 {
 		blockData.Body, err = s.blockState.GetBlockBody(hash)
 		if err != nil {
-			logger.Debug("failed to get body for block", "number", num, "hash", hash, "error", err)
+			logger.Debug(fmt.Sprintf("failed to get body for block number %s with hash %s: %s", num, hash, err))
 		}
 	}
 
