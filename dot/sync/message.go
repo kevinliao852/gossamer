@@ -147,14 +147,14 @@ func (s *Service) getBlockData(num *big.Int, requestedData byte) (*types.BlockDa
 	if (requestedData & network.RequestedDataHeader) == 1 {
 		blockData.Header, err = s.blockState.GetHeader(hash)
 		if err != nil {
-			logger.Debug(fmt.Sprintf("failed to get header for block number %s with hash %s: %s", num, hash, err))
+			logger.Debugf("failed to get header for block number %s with hash %s: %s", num, hash, err)
 		}
 	}
 
 	if (requestedData&network.RequestedDataBody)>>1 == 1 {
 		blockData.Body, err = s.blockState.GetBlockBody(hash)
 		if err != nil {
-			logger.Debug(fmt.Sprintf("failed to get body for block number %s with hash %s: %s", num, hash, err))
+			logger.Debugf("failed to get body for block number %s with hash %s: %s", num, hash, err)
 		}
 	}
 

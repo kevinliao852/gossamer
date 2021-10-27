@@ -156,7 +156,7 @@ func ext_logging_log_version_1(context unsafe.Pointer, level C.int32_t, targetDa
 	case 4:
 		logger.Trace("[ext_logging_log_version_1] target=" + target + " message=" + msg)
 	default:
-		logger.Error(fmt.Sprintf("[ext_logging_log_version_1] level=%d target=%s message=%s", int(level), target, msg))
+		logger.Errorf("[ext_logging_log_version_1] level=%d target=%s message=%s", int(level), target, msg)
 	}
 }
 
@@ -240,7 +240,7 @@ func ext_crypto_ed25519_generate_version_1(context unsafe.Pointer, keyTypeID C.i
 
 	seed, err := optional.NewBytes(false, nil).Decode(buf)
 	if err != nil {
-		logger.Warn(fmt.Sprintf("[ext_crypto_ed25519_generate_version_1] cannot generate key: %s", err))
+		logger.Warnf("[ext_crypto_ed25519_generate_version_1] cannot generate key: %s", err)
 		return 0
 	}
 
@@ -253,13 +253,13 @@ func ext_crypto_ed25519_generate_version_1(context unsafe.Pointer, keyTypeID C.i
 	}
 
 	if err != nil {
-		logger.Warn(fmt.Sprintf("[ext_crypto_ed25519_generate_version_1] cannot generate key: %s", err))
+		logger.Warnf("[ext_crypto_ed25519_generate_version_1] cannot generate key: %s", err)
 		return 0
 	}
 
 	ks, err := runtimeCtx.Keystore.GetKeystore(id)
 	if err != nil {
-		logger.Warn(fmt.Sprintf("[ext_crypto_ed25519_generate_version_1] error for id 0x%x: %s", id, err))
+		logger.Warnf("[ext_crypto_ed25519_generate_version_1] error for id 0x%x: %s", id, err)
 		return 0
 	}
 
@@ -267,7 +267,7 @@ func ext_crypto_ed25519_generate_version_1(context unsafe.Pointer, keyTypeID C.i
 
 	ret, err := toWasmMemorySized(instanceContext, kp.Public().Encode(), 32)
 	if err != nil {
-		logger.Warn(fmt.Sprintf("[ext_crypto_ed25519_generate_version_1] failed to allocate memory: %s", err))
+		logger.Warnf("[ext_crypto_ed25519_generate_version_1] failed to allocate memory: %s", err)
 		return 0
 	}
 
@@ -309,14 +309,14 @@ func ext_crypto_ed25519_public_keys_version_1(context unsafe.Pointer, keyTypeID 
 
 	prefix, err := scale.Marshal(big.NewInt(int64(len(keys))))
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_crypto_ed25519_public_keys_version_1] failed to allocate memory: %s", err))
+		logger.Errorf("[ext_crypto_ed25519_public_keys_version_1] failed to allocate memory: %s", err)
 		ret, _ := toWasmMemory(instanceContext, []byte{0})
 		return C.int64_t(ret)
 	}
 
 	ret, err := toWasmMemory(instanceContext, append(prefix, encodedKeys...))
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_crypto_ed25519_public_keys_version_1] failed to allocate memory: %s", err))
+		logger.Errorf("[ext_crypto_ed25519_public_keys_version_1] failed to allocate memory: %s", err)
 		ret, _ = toWasmMemory(instanceContext, []byte{0})
 		return C.int64_t(ret)
 	}
@@ -337,13 +337,13 @@ func ext_crypto_ed25519_sign_version_1(context unsafe.Pointer, keyTypeID, key C.
 	pubKeyData := memory[key : key+32]
 	pubKey, err := ed25519.NewPublicKey(pubKeyData)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_crypto_ed25519_sign_version_1] failed to get public keys: %s", err))
+		logger.Errorf("[ext_crypto_ed25519_sign_version_1] failed to get public keys: %s", err)
 		return 0
 	}
 
 	ks, err := runtimeCtx.Keystore.GetKeystore(id)
 	if err != nil {
-		logger.Warn(fmt.Sprintf("[ext_crypto_ed25519_sign_version_1] error for id 0x%x: %s", id, err))
+		logger.Warnf("[ext_crypto_ed25519_sign_version_1] error for id 0x%x: %s", id, err)
 		ret, _ := toWasmMemoryOptional(instanceContext, nil)
 		return C.int64_t(ret)
 	}
@@ -354,7 +354,7 @@ func ext_crypto_ed25519_sign_version_1(context unsafe.Pointer, keyTypeID, key C.
 		logger.Error("[ext_crypto_ed25519_sign_version_1] could not find public key " + pubKey.Hex() + " in keystore")
 		ret, err = toWasmMemoryOptional(instanceContext, nil)
 		if err != nil {
-			logger.Error(fmt.Sprintf("[ext_crypto_ed25519_sign_version_1] failed to allocate memory: %s", err))
+			logger.Errorf("[ext_crypto_ed25519_sign_version_1] failed to allocate memory: %s", err)
 			return 0
 		}
 		return C.int64_t(ret)
@@ -367,7 +367,7 @@ func ext_crypto_ed25519_sign_version_1(context unsafe.Pointer, keyTypeID, key C.
 
 	ret, err = toWasmMemoryFixedSizeOptional(instanceContext, sig)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_crypto_ed25519_sign_version_1] failed to allocate memory: %s", err))
+		logger.Errorf("[ext_crypto_ed25519_sign_version_1] failed to allocate memory: %s", err)
 		return 0
 	}
 
@@ -426,11 +426,11 @@ func ext_crypto_secp256k1_ecdsa_recover_version_1(context unsafe.Pointer, sig, m
 
 	pub, err := secp256k1.RecoverPublicKey(message, signature)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_crypto_secp256k1_ecdsa_recover_version_1] failed to recover public key: %s", err))
+		logger.Errorf("[ext_crypto_secp256k1_ecdsa_recover_version_1] failed to recover public key: %s", err)
 		var ret int64
 		ret, err = toWasmMemoryResult(instanceContext, nil)
 		if err != nil {
-			logger.Error(fmt.Sprintf("[ext_crypto_secp256k1_ecdsa_recover_version_1] failed to allocate memory: %s", err))
+			logger.Errorf("[ext_crypto_secp256k1_ecdsa_recover_version_1] failed to allocate memory: %s", err)
 			return 0
 		}
 		return C.int64_t(ret)
@@ -442,7 +442,7 @@ func ext_crypto_secp256k1_ecdsa_recover_version_1(context unsafe.Pointer, sig, m
 
 	ret, err := toWasmMemoryResult(instanceContext, pub[1:])
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_crypto_secp256k1_ecdsa_recover_version_1] failed to allocate memory: %s", err))
+		logger.Errorf("[ext_crypto_secp256k1_ecdsa_recover_version_1] failed to allocate memory: %s", err)
 		return 0
 	}
 
@@ -470,7 +470,7 @@ func ext_crypto_ecdsa_verify_version_2(context unsafe.Pointer, sig C.int32_t, ms
 	pub := new(secp256k1.PublicKey)
 	err := pub.Decode(pubKey)
 	if err != nil {
-		logger.Error(fmt.Sprintf("failed to decode public key: %s", err))
+		logger.Errorf("failed to decode public key: %s", err)
 		return C.int32_t(0)
 	}
 
@@ -479,7 +479,7 @@ func ext_crypto_ecdsa_verify_version_2(context unsafe.Pointer, sig C.int32_t, ms
 
 	hash, err := common.Blake2bHash(message)
 	if err != nil {
-		logger.Error(fmt.Sprintf("failed to hash message: %s", err))
+		logger.Errorf("failed to hash message: %s", err)
 		return C.int32_t(0)
 	}
 
@@ -495,7 +495,7 @@ func ext_crypto_ecdsa_verify_version_2(context unsafe.Pointer, sig C.int32_t, ms
 	}
 
 	if ok, err := pub.Verify(hash[:], signature); err != nil || !ok {
-		logger.Error(fmt.Sprintf("failed to validate signature: %s", err))
+		logger.Errorf("failed to validate signature: %s", err)
 		return C.int32_t(0)
 	}
 
@@ -517,7 +517,7 @@ func ext_crypto_secp256k1_ecdsa_recover_compressed_version_1(context unsafe.Poin
 
 	cpub, err := secp256k1.RecoverPublicKeyCompressed(message, signature)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_crypto_secp256k1_ecdsa_recover_compressed_version_1] failed to recover public key: %s", err))
+		logger.Errorf("[ext_crypto_secp256k1_ecdsa_recover_compressed_version_1] failed to recover public key: %s", err)
 		ret, _ := toWasmMemoryResult(instanceContext, nil)
 		return C.int64_t(ret)
 	}
@@ -528,7 +528,7 @@ func ext_crypto_secp256k1_ecdsa_recover_compressed_version_1(context unsafe.Poin
 
 	ret, err := toWasmMemoryResult(instanceContext, cpub)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_crypto_secp256k1_ecdsa_recover_compressed_version_1] failed to allocate memory: %s", err))
+		logger.Errorf("[ext_crypto_secp256k1_ecdsa_recover_compressed_version_1] failed to allocate memory: %s", err)
 		return 0
 	}
 
@@ -557,7 +557,7 @@ func ext_crypto_sr25519_generate_version_1(context unsafe.Pointer, keyTypeID C.i
 
 	seed, err := optional.NewBytes(false, nil).Decode(buf)
 	if err != nil {
-		logger.Warn(fmt.Sprintf("[ext_crypto_sr25519_generate_version_1] cannot generate key: %s", err))
+		logger.Warnf("[ext_crypto_sr25519_generate_version_1] cannot generate key: %s", err)
 		return 0
 	}
 
@@ -569,20 +569,20 @@ func ext_crypto_sr25519_generate_version_1(context unsafe.Pointer, keyTypeID C.i
 	}
 
 	if err != nil {
-		logger.Trace(fmt.Sprintf("[ext_crypto_sr25519_generate_version_1] cannot generate key: %s", err))
+		logger.Tracef("[ext_crypto_sr25519_generate_version_1] cannot generate key: %s", err)
 		panic(err)
 	}
 
 	ks, err := runtimeCtx.Keystore.GetKeystore(id)
 	if err != nil {
-		logger.Warn(fmt.Sprintf("[ext_crypto_sr25519_generate_version_1] error for id "+common.BytesToHex(id)+": %s", err))
+		logger.Warnf("[ext_crypto_sr25519_generate_version_1] error for id "+common.BytesToHex(id)+": %s", err)
 		return 0
 	}
 
 	ks.Insert(kp)
 	ret, err := toWasmMemorySized(instanceContext, kp.Public().Encode(), 32)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_crypto_sr25519_generate_version_1] failed to allocate memory: %s", err))
+		logger.Errorf("[ext_crypto_sr25519_generate_version_1] failed to allocate memory: %s", err)
 		return 0
 	}
 
@@ -602,7 +602,7 @@ func ext_crypto_sr25519_public_keys_version_1(context unsafe.Pointer, keyTypeID 
 
 	ks, err := runtimeCtx.Keystore.GetKeystore(id)
 	if err != nil {
-		logger.Warn(fmt.Sprintf("[ext_crypto_sr25519_public_keys_version_1] error for id "+common.BytesToHex(id)+": %s", err))
+		logger.Warnf("[ext_crypto_sr25519_public_keys_version_1] error for id "+common.BytesToHex(id)+": %s", err)
 		ret, _ := toWasmMemory(instanceContext, []byte{0})
 		return C.int64_t(ret)
 	}
@@ -623,14 +623,14 @@ func ext_crypto_sr25519_public_keys_version_1(context unsafe.Pointer, keyTypeID 
 
 	prefix, err := scale.Marshal(big.NewInt(int64(len(keys))))
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_crypto_sr25519_public_keys_version_1] failed to allocate memory: %s", err))
+		logger.Errorf("[ext_crypto_sr25519_public_keys_version_1] failed to allocate memory: %s", err)
 		ret, _ := toWasmMemory(instanceContext, []byte{0})
 		return C.int64_t(ret)
 	}
 
 	ret, err := toWasmMemory(instanceContext, append(prefix, encodedKeys...))
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_crypto_sr25519_public_keys_version_1] failed to allocate memory: %s", err))
+		logger.Errorf("[ext_crypto_sr25519_public_keys_version_1] failed to allocate memory: %s", err)
 		ret, _ = toWasmMemory(instanceContext, []byte{0})
 		return C.int64_t(ret)
 	}
@@ -651,14 +651,14 @@ func ext_crypto_sr25519_sign_version_1(context unsafe.Pointer, keyTypeID, key C.
 
 	ks, err := runtimeCtx.Keystore.GetKeystore(id)
 	if err != nil {
-		logger.Warn(fmt.Sprintf("[ext_crypto_sr25519_sign_version_1] error for id 0x%x: %s", id, err))
+		logger.Warnf("[ext_crypto_sr25519_sign_version_1] error for id 0x%x: %s", id, err)
 		return C.int64_t(emptyRet)
 	}
 
 	var ret int64
 	pubKey, err := sr25519.NewPublicKey(memory[key : key+32])
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_crypto_sr25519_sign_version_1] failed to get public key: %s", err))
+		logger.Errorf("[ext_crypto_sr25519_sign_version_1] failed to get public key: %s", err)
 		return C.int64_t(emptyRet)
 	}
 
@@ -671,13 +671,13 @@ func ext_crypto_sr25519_sign_version_1(context unsafe.Pointer, keyTypeID, key C.
 	msgData := asMemorySlice(instanceContext, msg)
 	sig, err := signingKey.Sign(msgData)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_crypto_sr25519_sign_version_1] could not sign message: %s", err))
+		logger.Errorf("[ext_crypto_sr25519_sign_version_1] could not sign message: %s", err)
 		return C.int64_t(emptyRet)
 	}
 
 	ret, err = toWasmMemoryFixedSizeOptional(instanceContext, sig)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_crypto_sr25519_sign_version_1] failed to allocate memory: %s", err))
+		logger.Errorf("[ext_crypto_sr25519_sign_version_1] failed to allocate memory: %s", err)
 		return C.int64_t(emptyRet)
 	}
 
@@ -717,7 +717,7 @@ func ext_crypto_sr25519_verify_version_1(context unsafe.Pointer, sig C.int32_t, 
 	}
 
 	if ok, err := pub.VerifyDeprecated(message, signature); err != nil || !ok {
-		logger.Debug(fmt.Sprintf("[ext_crypto_sr25519_verify_version_1] failed to validate signature: %s", err))
+		logger.Debugf("[ext_crypto_sr25519_verify_version_1] failed to validate signature: %s", err)
 		// this fails at block 3876, which seems to be expected, based on discussions
 		return 1
 	}
@@ -759,7 +759,7 @@ func ext_crypto_sr25519_verify_version_2(context unsafe.Pointer, sig C.int32_t, 
 	}
 
 	if ok, err := pub.Verify(message, signature); err != nil || !ok {
-		logger.Error(fmt.Sprintf("[ext_crypto_sr25519_verify_version_2] failed to validate signature: %s", err))
+		logger.Errorf("[ext_crypto_sr25519_verify_version_2] failed to validate signature: %s", err)
 		return 0
 	}
 
@@ -830,7 +830,7 @@ func ext_trie_blake2_256_root_version_1(context unsafe.Pointer, dataSpan C.int64
 	// this function is expecting an array of (key, value) tuples
 	var kvs []kv
 	if err := scale.Unmarshal(data, &kvs); err != nil {
-		logger.Error(fmt.Sprintf("[ext_trie_blake2_256_root_version_1]: %s", err))
+		logger.Errorf("[ext_trie_blake2_256_root_version_1]: %s", err)
 		return 0
 	}
 
@@ -841,17 +841,17 @@ func ext_trie_blake2_256_root_version_1(context unsafe.Pointer, dataSpan C.int64
 	// allocate memory for value and copy value to memory
 	ptr, err := runtimeCtx.Allocator.Allocate(32)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_trie_blake2_256_root_version_1]: %s", err))
+		logger.Errorf("[ext_trie_blake2_256_root_version_1]: %s", err)
 		return 0
 	}
 
 	hash, err := t.Hash()
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_trie_blake2_256_root_version_1]: %s", err))
+		logger.Errorf("[ext_trie_blake2_256_root_version_1]: %s", err)
 		return 0
 	}
 
-	logger.Debug(fmt.Sprintf("[ext_trie_blake2_256_root_version_1]: root hash is %s", hash))
+	logger.Debugf("[ext_trie_blake2_256_root_version_1]: root hash is %s", hash)
 	copy(memory[ptr:ptr+32], hash[:])
 	return C.int32_t(ptr)
 }
@@ -869,14 +869,14 @@ func ext_trie_blake2_256_ordered_root_version_1(context unsafe.Pointer, dataSpan
 	var values [][]byte
 	err := scale.Unmarshal(data, &values)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_trie_blake2_256_ordered_root_version_1]: %s", err))
+		logger.Errorf("[ext_trie_blake2_256_ordered_root_version_1]: %s", err)
 		return 0
 	}
 
 	for i, val := range values {
 		key, err := scale.Marshal(big.NewInt(int64(i))) //nolint
 		if err != nil {
-			logger.Error(fmt.Sprintf("[ext_trie_blake2_256_ordered_root_version_1]: %s", err))
+			logger.Errorf("[ext_trie_blake2_256_ordered_root_version_1]: %s", err)
 			return 0
 		}
 		logger.Trace(fmt.Sprintf(
@@ -889,17 +889,17 @@ func ext_trie_blake2_256_ordered_root_version_1(context unsafe.Pointer, dataSpan
 	// allocate memory for value and copy value to memory
 	ptr, err := runtimeCtx.Allocator.Allocate(32)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_trie_blake2_256_ordered_root_version_1]: %s", err))
+		logger.Errorf("[ext_trie_blake2_256_ordered_root_version_1]: %s", err)
 		return 0
 	}
 
 	hash, err := t.Hash()
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_trie_blake2_256_ordered_root_version_1]: %s", err))
+		logger.Errorf("[ext_trie_blake2_256_ordered_root_version_1]: %s", err)
 		return 0
 	}
 
-	logger.Debug(fmt.Sprintf("[ext_trie_blake2_256_ordered_root_version_1]: root hash is %s", hash))
+	logger.Debugf("[ext_trie_blake2_256_ordered_root_version_1]: root hash is %s", hash)
 	copy(memory[ptr:ptr+32], hash[:])
 	return C.int32_t(ptr)
 }
@@ -917,14 +917,14 @@ func ext_misc_print_hex_version_1(context unsafe.Pointer, dataSpan C.int64_t) {
 
 	instanceContext := wasm.IntoInstanceContext(context)
 	data := asMemorySlice(instanceContext, dataSpan)
-	logger.Debug(fmt.Sprintf("[ext_misc_print_hex_version_1] data: 0x%x", data))
+	logger.Debugf("[ext_misc_print_hex_version_1] data: 0x%x", data)
 }
 
 //export ext_misc_print_num_version_1
 func ext_misc_print_num_version_1(_ unsafe.Pointer, data C.int64_t) {
 	logger.Trace("[ext_misc_print_num_version_1] executing...")
 
-	logger.Debug(fmt.Sprintf("[ext_misc_print_num_version_1] num: %d", int64(data)))
+	logger.Debugf("[ext_misc_print_num_version_1] num: %d", int64(data))
 }
 
 //export ext_misc_print_utf8_version_1
@@ -951,7 +951,7 @@ func ext_misc_runtime_version_version_1(context unsafe.Pointer, dataSpan C.int64
 
 	instance, err := NewInstance(data, cfg)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_misc_runtime_version_version_1] failed to create instance: %s", err))
+		logger.Errorf("[ext_misc_runtime_version_version_1] failed to create instance: %s", err)
 		return 0
 	}
 
@@ -966,13 +966,13 @@ func ext_misc_runtime_version_version_1(context unsafe.Pointer, dataSpan C.int64
 
 	encodedData, err := version.Encode()
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_misc_runtime_version_version_1] failed to encode result: %s", err))
+		logger.Errorf("[ext_misc_runtime_version_version_1] failed to encode result: %s", err)
 		return 0
 	}
 
 	out, err := toWasmMemoryOptional(instanceContext, encodedData)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_misc_runtime_version_version_1] failed to allocate: %s", err))
+		logger.Errorf("[ext_misc_runtime_version_version_1] failed to allocate: %s", err)
 		return 0
 	}
 
@@ -989,7 +989,7 @@ func ext_default_child_storage_read_version_1(context unsafe.Pointer, childStora
 
 	value, err := storage.GetChildStorage(asMemorySlice(instanceContext, childStorageKey), asMemorySlice(instanceContext, key))
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_default_child_storage_read_version_1] failed to get child storage: %s", err))
+		logger.Errorf("[ext_default_child_storage_read_version_1] failed to get child storage: %s", err)
 		return 0
 	}
 
@@ -1002,7 +1002,7 @@ func ext_default_child_storage_read_version_1(context unsafe.Pointer, childStora
 
 	sizeSpan, err := toWasmMemoryOptional(instanceContext, sizeBuf)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_default_child_storage_read_version_1] failed to allocate: %s", err))
+		logger.Errorf("[ext_default_child_storage_read_version_1] failed to allocate: %s", err)
 		return 0
 	}
 
@@ -1022,7 +1022,7 @@ func ext_default_child_storage_clear_version_1(context unsafe.Pointer, childStor
 
 	err := storage.ClearChildStorage(keyToChild, key)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_default_child_storage_clear_version_1] failed to clear child storage: %s", err))
+		logger.Errorf("[ext_default_child_storage_clear_version_1] failed to clear child storage: %s", err)
 	}
 }
 
@@ -1039,7 +1039,7 @@ func ext_default_child_storage_clear_prefix_version_1(context unsafe.Pointer, ch
 
 	err := storage.ClearPrefixInChild(keyToChild, prefix)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_default_child_storage_clear_prefix_version_1] failed to clear prefix in child: %s", err))
+		logger.Errorf("[ext_default_child_storage_clear_prefix_version_1] failed to clear prefix in child: %s", err)
 	}
 }
 
@@ -1052,7 +1052,7 @@ func ext_default_child_storage_exists_version_1(context unsafe.Pointer, childSto
 
 	child, err := storage.GetChildStorage(asMemorySlice(instanceContext, childStorageKey), asMemorySlice(instanceContext, key))
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_default_child_storage_exists_version_1] failed to get child from child storage: %s", err))
+		logger.Errorf("[ext_default_child_storage_exists_version_1] failed to get child from child storage: %s", err)
 		return 0
 	}
 	if child != nil {
@@ -1070,13 +1070,13 @@ func ext_default_child_storage_get_version_1(context unsafe.Pointer, childStorag
 
 	child, err := storage.GetChildStorage(asMemorySlice(instanceContext, childStorageKey), asMemorySlice(instanceContext, key))
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_default_child_storage_get_version_1] failed to get child from child storage: %s", err))
+		logger.Errorf("[ext_default_child_storage_get_version_1] failed to get child from child storage: %s", err)
 		return 0
 	}
 
 	value, err := toWasmMemoryOptional(instanceContext, child)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_default_child_storage_get_version_1] failed to allocate: %s", err))
+		logger.Errorf("[ext_default_child_storage_get_version_1] failed to allocate: %s", err)
 		return 0
 	}
 
@@ -1092,13 +1092,13 @@ func ext_default_child_storage_next_key_version_1(context unsafe.Pointer, childS
 
 	child, err := storage.GetChildNextKey(asMemorySlice(instanceContext, childStorageKey), asMemorySlice(instanceContext, key))
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_default_child_storage_next_key_version_1] failed to get child's next key: %s", err))
+		logger.Errorf("[ext_default_child_storage_next_key_version_1] failed to get child's next key: %s", err)
 		return 0
 	}
 
 	value, err := toWasmMemoryOptional(instanceContext, child)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_default_child_storage_next_key_version_1] failed to allocate: %s", err))
+		logger.Errorf("[ext_default_child_storage_next_key_version_1] failed to allocate: %s", err)
 		return 0
 	}
 
@@ -1114,19 +1114,19 @@ func ext_default_child_storage_root_version_1(context unsafe.Pointer, childStora
 
 	child, err := storage.GetChild(asMemorySlice(instanceContext, childStorageKey))
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_default_child_storage_root_version_1] failed to retrieve child: %s", err))
+		logger.Errorf("[ext_default_child_storage_root_version_1] failed to retrieve child: %s", err)
 		return 0
 	}
 
 	childRoot, err := child.Hash()
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_default_child_storage_root_version_1] failed to encode child root: %s", err))
+		logger.Errorf("[ext_default_child_storage_root_version_1] failed to encode child root: %s", err)
 		return 0
 	}
 
 	root, err := toWasmMemoryOptional(instanceContext, childRoot[:])
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_default_child_storage_root_version_1] failed to allocate: %s", err))
+		logger.Errorf("[ext_default_child_storage_root_version_1] failed to allocate: %s", err)
 		return 0
 	}
 
@@ -1150,7 +1150,7 @@ func ext_default_child_storage_set_version_1(context unsafe.Pointer, childStorag
 
 	err := storage.SetChildStorage(childStorageKey, key, cp)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_default_child_storage_set_version_1] failed to set value in child storage: %s", err))
+		logger.Errorf("[ext_default_child_storage_set_version_1] failed to set value in child storage: %s", err)
 		return
 	}
 }
@@ -1182,13 +1182,13 @@ func ext_default_child_storage_storage_kill_version_2(context unsafe.Pointer, ch
 
 	limit, err := optional.NewBytes(true, nil).Decode(buf)
 	if err != nil {
-		logger.Warn(fmt.Sprintf("[ext_default_child_storage_storage_kill_version_2] cannot generate limit: %s", err))
+		logger.Warnf("[ext_default_child_storage_storage_kill_version_2] cannot generate limit: %s", err)
 		return 0
 	}
 
 	_, all, err := storage.DeleteChildLimit(childStorageKey, limit)
 	if err != nil {
-		logger.Warn(fmt.Sprintf("[ext_default_child_storage_storage_kill_version_2] cannot get child storage: %s", err))
+		logger.Warnf("[ext_default_child_storage_storage_kill_version_2] cannot get child storage: %s", err)
 	}
 
 	if all {
@@ -1222,18 +1222,18 @@ func ext_default_child_storage_storage_kill_version_3(context unsafe.Pointer, ch
 
 	limit, err := optional.NewBytes(true, nil).Decode(buf)
 	if err != nil {
-		logger.Warn(fmt.Sprintf("cannot generate limit: %s", err))
+		logger.Warnf("cannot generate limit: %s", err)
 	}
 
 	deleted, all, err := storage.DeleteChildLimit(childStorageKey, limit)
 	if err != nil {
-		logger.Warn(fmt.Sprintf("cannot get child storage: %s", err))
+		logger.Warnf("cannot get child storage: %s", err)
 		return C.int64_t(0)
 	}
 
 	vdt, err := scale.NewVaryingDataType(noneRemain(0), someRemain(0))
 	if err != nil {
-		logger.Warn(fmt.Sprintf("cannot create new varying data type: %s", err))
+		logger.Warnf("cannot create new varying data type: %s", err)
 	}
 
 	if all {
@@ -1242,19 +1242,19 @@ func ext_default_child_storage_storage_kill_version_3(context unsafe.Pointer, ch
 		err = vdt.Set(someRemain(deleted))
 	}
 	if err != nil {
-		logger.Warn(fmt.Sprintf("cannot set varying data type: %s", err))
+		logger.Warnf("cannot set varying data type: %s", err)
 		return C.int64_t(0)
 	}
 
 	encoded, err := scale.Marshal(vdt)
 	if err != nil {
-		logger.Warn(fmt.Sprintf("problem marshaling varying data type: %s", err))
+		logger.Warnf("problem marshaling varying data type: %s", err)
 		return C.int64_t(0)
 	}
 
 	out, err := toWasmMemoryOptional(instanceContext, encoded)
 	if err != nil {
-		logger.Warn(fmt.Sprintf("failed to allocate: %s", err))
+		logger.Warnf("failed to allocate: %s", err)
 		return 0
 	}
 
@@ -1270,13 +1270,13 @@ func ext_allocator_free_version_1(context unsafe.Pointer, addr C.int32_t) {
 	// Deallocate memory
 	err := runtimeCtx.Allocator.Deallocate(uint32(addr))
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_allocator_free_version_1] failed to free memory: %s", err))
+		logger.Errorf("[ext_allocator_free_version_1] failed to free memory: %s", err)
 	}
 }
 
 //export ext_allocator_malloc_version_1
 func ext_allocator_malloc_version_1(context unsafe.Pointer, size C.int32_t) C.int32_t {
-	logger.Trace(fmt.Sprintf("[ext_allocator_malloc_version_1] executing with size %d...", int64(size)))
+	logger.Tracef("[ext_allocator_malloc_version_1] executing with size %d...", int64(size))
 
 	instanceContext := wasm.IntoInstanceContext(context)
 	ctx := instanceContext.Data().(*runtime.Context)
@@ -1284,7 +1284,7 @@ func ext_allocator_malloc_version_1(context unsafe.Pointer, size C.int32_t) C.in
 	// Allocate memory
 	res, err := ctx.Allocator.Allocate(uint32(size))
 	if err != nil {
-		logger.Critical(fmt.Sprintf("[ext_allocator_malloc_version_1] failed to allocate memory: %s", err))
+		logger.Criticalf("[ext_allocator_malloc_version_1] failed to allocate memory: %s", err)
 		panic(err)
 	}
 
@@ -1300,7 +1300,7 @@ func ext_hashing_blake2_128_version_1(context unsafe.Pointer, dataSpan C.int64_t
 
 	hash, err := common.Blake2b128(data)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_hashing_blake2_128_version_1]: %s", err))
+		logger.Errorf("[ext_hashing_blake2_128_version_1]: %s", err)
 		return 0
 	}
 
@@ -1310,7 +1310,7 @@ func ext_hashing_blake2_128_version_1(context unsafe.Pointer, dataSpan C.int64_t
 
 	out, err := toWasmMemorySized(instanceContext, hash, 16)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_hashing_blake2_128_version_1] failed to allocate: %s", err))
+		logger.Errorf("[ext_hashing_blake2_128_version_1] failed to allocate: %s", err)
 		return 0
 	}
 
@@ -1326,7 +1326,7 @@ func ext_hashing_blake2_256_version_1(context unsafe.Pointer, dataSpan C.int64_t
 
 	hash, err := common.Blake2bHash(data)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_hashing_blake2_256_version_1]: %s", err))
+		logger.Errorf("[ext_hashing_blake2_256_version_1]: %s", err)
 		return 0
 	}
 
@@ -1335,7 +1335,7 @@ func ext_hashing_blake2_256_version_1(context unsafe.Pointer, dataSpan C.int64_t
 
 	out, err := toWasmMemorySized(instanceContext, hash[:], 32)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_hashing_blake2_256_version_1] failed to allocate: %s", err))
+		logger.Errorf("[ext_hashing_blake2_256_version_1] failed to allocate: %s", err)
 		return 0
 	}
 
@@ -1351,7 +1351,7 @@ func ext_hashing_keccak_256_version_1(context unsafe.Pointer, dataSpan C.int64_t
 
 	hash, err := common.Keccak256(data)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_hashing_keccak_256_version_1]: %s", err))
+		logger.Errorf("[ext_hashing_keccak_256_version_1]: %s", err)
 		return 0
 	}
 
@@ -1360,7 +1360,7 @@ func ext_hashing_keccak_256_version_1(context unsafe.Pointer, dataSpan C.int64_t
 
 	out, err := toWasmMemorySized(instanceContext, hash[:], 32)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_hashing_keccak_256_version_1] failed to allocate: %s", err))
+		logger.Errorf("[ext_hashing_keccak_256_version_1] failed to allocate: %s", err)
 		return 0
 	}
 
@@ -1380,7 +1380,7 @@ func ext_hashing_sha2_256_version_1(context unsafe.Pointer, dataSpan C.int64_t) 
 
 	out, err := toWasmMemorySized(instanceContext, hash[:], 32)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_hashing_sha2_256_version_1] failed to allocate: %s", err))
+		logger.Errorf("[ext_hashing_sha2_256_version_1] failed to allocate: %s", err)
 		return 0
 	}
 
@@ -1396,7 +1396,7 @@ func ext_hashing_twox_256_version_1(context unsafe.Pointer, dataSpan C.int64_t) 
 
 	hash, err := common.Twox256(data)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_hashing_twox_256_version_1]: %s", err))
+		logger.Errorf("[ext_hashing_twox_256_version_1]: %s", err)
 		return 0
 	}
 
@@ -1405,7 +1405,7 @@ func ext_hashing_twox_256_version_1(context unsafe.Pointer, dataSpan C.int64_t) 
 
 	out, err := toWasmMemorySized(instanceContext, hash[:], 32)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_hashing_twox_256_version_1] failed to allocate: %s", err))
+		logger.Errorf("[ext_hashing_twox_256_version_1] failed to allocate: %s", err)
 		return 0
 	}
 
@@ -1420,7 +1420,7 @@ func ext_hashing_twox_128_version_1(context unsafe.Pointer, dataSpan C.int64_t) 
 
 	hash, err := common.Twox128Hash(data)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_hashing_twox_128_version_1]: %s", err))
+		logger.Errorf("[ext_hashing_twox_128_version_1]: %s", err)
 		return 0
 	}
 
@@ -1430,7 +1430,7 @@ func ext_hashing_twox_128_version_1(context unsafe.Pointer, dataSpan C.int64_t) 
 
 	out, err := toWasmMemorySized(instanceContext, hash, 16)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_hashing_twox_128_version_1] failed to allocate: %s", err))
+		logger.Errorf("[ext_hashing_twox_128_version_1] failed to allocate: %s", err)
 		return 0
 	}
 
@@ -1446,7 +1446,7 @@ func ext_hashing_twox_64_version_1(context unsafe.Pointer, dataSpan C.int64_t) C
 
 	hash, err := common.Twox64(data)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_hashing_twox_64_version_1]: %s", err))
+		logger.Errorf("[ext_hashing_twox_64_version_1]: %s", err)
 		return 0
 	}
 
@@ -1456,7 +1456,7 @@ func ext_hashing_twox_64_version_1(context unsafe.Pointer, dataSpan C.int64_t) C
 
 	out, err := toWasmMemorySized(instanceContext, hash, 8)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_hashing_twox_64_version_1] failed to allocate: %s", err))
+		logger.Errorf("[ext_hashing_twox_64_version_1] failed to allocate: %s", err)
 		return 0
 	}
 
@@ -1476,7 +1476,7 @@ func ext_offchain_index_set_version_1(context unsafe.Pointer, keySpan, valueSpan
 
 	err := runtimeCtx.NodeStorage.BaseDB.Put(storageKey, cp)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_offchain_index_set_version_1] failed to set value in raw storage: %s", err))
+		logger.Errorf("[ext_offchain_index_set_version_1] failed to set value in raw storage: %s", err)
 	}
 }
 
@@ -1501,7 +1501,7 @@ func ext_offchain_local_storage_clear_version_1(context unsafe.Pointer, kind C.i
 	}
 
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_offchain_local_storage_clear_version_1] failed to clear value from storage: %s", err))
+		logger.Errorf("[ext_offchain_local_storage_clear_version_1] failed to clear value from storage: %s", err)
 	}
 }
 
@@ -1537,7 +1537,7 @@ func ext_offchain_local_storage_compare_and_set_version_1(context unsafe.Pointer
 	}
 
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_offchain_local_storage_compare_and_set_version_1] failed to get value from storage: %s", err))
+		logger.Errorf("[ext_offchain_local_storage_compare_and_set_version_1] failed to get value from storage: %s", err)
 		return 0
 	}
 
@@ -1548,7 +1548,7 @@ func ext_offchain_local_storage_compare_and_set_version_1(context unsafe.Pointer
 		copy(cp, newVal)
 		err = runtimeCtx.NodeStorage.LocalStorage.Put(storageKey, cp)
 		if err != nil {
-			logger.Error(fmt.Sprintf("[ext_offchain_local_storage_compare_and_set_version_1] failed to set value in storage: %s", err))
+			logger.Errorf("[ext_offchain_local_storage_compare_and_set_version_1] failed to set value in storage: %s", err)
 			return 0
 		}
 	}
@@ -1575,12 +1575,12 @@ func ext_offchain_local_storage_get_version_1(context unsafe.Pointer, kind C.int
 	}
 
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_offchain_local_storage_get_version_1] failed to get value from storage: %s", err))
+		logger.Errorf("[ext_offchain_local_storage_get_version_1] failed to get value from storage: %s", err)
 	}
 	// allocate memory for value and copy value to memory
 	ptr, err := toWasmMemoryOptional(instanceContext, res)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_offchain_local_storage_get_version_1] failed to allocate memory: %s", err))
+		logger.Errorf("[ext_offchain_local_storage_get_version_1] failed to allocate memory: %s", err)
 		return 0
 	}
 	return C.int64_t(ptr)
@@ -1606,7 +1606,7 @@ func ext_offchain_local_storage_set_version_1(context unsafe.Pointer, kind C.int
 	}
 
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_offchain_local_storage_set_version_1] failed to set value in storage: %s", err))
+		logger.Errorf("[ext_offchain_local_storage_set_version_1] failed to set value in storage: %s", err)
 	}
 }
 
@@ -1621,7 +1621,7 @@ func ext_offchain_network_state_version_1(context unsafe.Pointer) C.int64_t {
 
 	nsEnc, err := scale.Marshal(runtimeCtx.Network.NetworkState())
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_offchain_network_state_version_1] failed at encoding network state: %s", err))
+		logger.Errorf("[ext_offchain_network_state_version_1] failed at encoding network state: %s", err)
 		return 0
 	}
 
@@ -1633,7 +1633,7 @@ func ext_offchain_network_state_version_1(context unsafe.Pointer) C.int64_t {
 	// allocate memory for value and copy value to memory
 	ptr, err := toWasmMemorySized(instanceContext, nsEnc, nsEncLen)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_offchain_network_state_version_1] failed to allocate memory: %s", err))
+		logger.Errorf("[ext_offchain_network_state_version_1] failed to allocate memory: %s", err)
 		return 0
 	}
 
@@ -1648,11 +1648,11 @@ func ext_offchain_random_seed_version_1(context unsafe.Pointer) C.int32_t {
 	seed := make([]byte, 32)
 	_, err := rand.Read(seed)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_offchain_random_seed_version_1] failed to generate random seed: %s", err))
+		logger.Errorf("[ext_offchain_random_seed_version_1] failed to generate random seed: %s", err)
 	}
 	ptr, err := toWasmMemorySized(instanceContext, seed, 32)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_offchain_random_seed_version_1] failed to allocate memory: %s", err))
+		logger.Errorf("[ext_offchain_random_seed_version_1] failed to allocate memory: %s", err)
 	}
 	return C.int32_t(ptr)
 }
@@ -1667,7 +1667,7 @@ func ext_offchain_submit_transaction_version_1(context unsafe.Pointer, data C.in
 	var extrinsic []byte
 	err := scale.Unmarshal(extBytes, &extrinsic)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_offchain_submit_transaction_version_1] failed to decode extrinsic data: %s", err))
+		logger.Errorf("[ext_offchain_submit_transaction_version_1] failed to decode extrinsic data: %s", err)
 	}
 
 	// validate the transaction
@@ -1679,7 +1679,7 @@ func ext_offchain_submit_transaction_version_1(context unsafe.Pointer, data C.in
 
 	ptr, err := toWasmMemoryOptional(instanceContext, nil)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_offchain_submit_transaction_version_1] failed to allocate memory: %s", err))
+		logger.Errorf("[ext_offchain_submit_transaction_version_1] failed to allocate memory: %s", err)
 	}
 	return C.int64_t(ptr)
 }
@@ -1731,13 +1731,13 @@ func storageAppend(storage runtime.Storage, key, valueToAppend []byte) error {
 
 	lengthEnc, err := scale.Marshal(nextLength)
 	if err != nil {
-		logger.Trace(fmt.Sprintf("[ext_storage_append_version_1] failed to encode new length: %s", err))
+		logger.Tracef("[ext_storage_append_version_1] failed to encode new length: %s", err)
 		return err
 	}
 
 	// append new length prefix to start of items array
 	lengthEnc = append(lengthEnc, valueRes...)
-	logger.Debug(fmt.Sprintf("[ext_storage_append_version_1] resulting value: 0x%x", lengthEnc))
+	logger.Debugf("[ext_storage_append_version_1] resulting value: 0x%x", lengthEnc)
 	storage.Set(key, lengthEnc)
 	return nil
 }
@@ -1760,7 +1760,7 @@ func ext_storage_append_version_1(context unsafe.Pointer, keySpan, valueSpan C.i
 
 	err := storageAppend(storage, key, cp)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_storage_append_version_1]: %s", err))
+		logger.Errorf("[ext_storage_append_version_1]: %s", err)
 	}
 }
 
@@ -1773,7 +1773,7 @@ func ext_storage_changes_root_version_1(context unsafe.Pointer, parentHashSpan C
 
 	rootSpan, err := toWasmMemoryOptional(instanceContext, nil)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_storage_changes_root_version_1] failed to allocate: %s", err))
+		logger.Errorf("[ext_storage_changes_root_version_1] failed to allocate: %s", err)
 		return 0
 	}
 
@@ -1789,7 +1789,7 @@ func ext_storage_clear_version_1(context unsafe.Pointer, keySpan C.int64_t) {
 
 	key := asMemorySlice(instanceContext, keySpan)
 
-	logger.Debug(fmt.Sprintf("[ext_storage_clear_version_1] key: 0x%x", key))
+	logger.Debugf("[ext_storage_clear_version_1] key: 0x%x", key)
 	storage.Delete(key)
 }
 
@@ -1801,11 +1801,11 @@ func ext_storage_clear_prefix_version_1(context unsafe.Pointer, prefixSpan C.int
 	storage := ctx.Storage
 
 	prefix := asMemorySlice(instanceContext, prefixSpan)
-	logger.Debug(fmt.Sprintf("[ext_storage_clear_prefix_version_1] prefix: 0x%x", prefix))
+	logger.Debugf("[ext_storage_clear_prefix_version_1] prefix: 0x%x", prefix)
 
 	err := storage.ClearPrefix(prefix)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_storage_clear_prefix_version_1]: %s", err))
+		logger.Errorf("[ext_storage_clear_prefix_version_1]: %s", err)
 	}
 }
 
@@ -1820,11 +1820,11 @@ func ext_storage_clear_prefix_version_2(context unsafe.Pointer, prefixSpan, _ C.
 	storage := ctx.Storage
 
 	prefix := asMemorySlice(instanceContext, prefixSpan)
-	logger.Debug(fmt.Sprintf("[ext_storage_clear_prefix_version_1] prefix: 0x%x", prefix))
+	logger.Debugf("[ext_storage_clear_prefix_version_1] prefix: 0x%x", prefix)
 
 	err := storage.ClearPrefix(prefix)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_storage_clear_prefix_version_1]: %s", err))
+		logger.Errorf("[ext_storage_clear_prefix_version_1]: %s", err)
 	}
 
 	return 1
@@ -1837,7 +1837,7 @@ func ext_storage_exists_version_1(context unsafe.Pointer, keySpan C.int64_t) C.i
 	storage := instanceContext.Data().(*runtime.Context).Storage
 
 	key := asMemorySlice(instanceContext, keySpan)
-	logger.Debug(fmt.Sprintf("[ext_storage_exists_version_1] key: 0x%x", key))
+	logger.Debugf("[ext_storage_exists_version_1] key: 0x%x", key)
 
 	val := storage.Get(key)
 	if len(val) > 0 {
@@ -1855,14 +1855,14 @@ func ext_storage_get_version_1(context unsafe.Pointer, keySpan C.int64_t) C.int6
 	storage := instanceContext.Data().(*runtime.Context).Storage
 
 	key := asMemorySlice(instanceContext, keySpan)
-	logger.Debug(fmt.Sprintf("[ext_storage_get_version_1] key: 0x%x", key))
+	logger.Debugf("[ext_storage_get_version_1] key: 0x%x", key)
 
 	value := storage.Get(key)
-	logger.Debug(fmt.Sprintf("[ext_storage_get_version_1] value: 0x%x", value))
+	logger.Debugf("[ext_storage_get_version_1] value: 0x%x", value)
 
 	valueSpan, err := toWasmMemoryOptional(instanceContext, value)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_storage_get_version_1] failed to allocate: %s", err))
+		logger.Errorf("[ext_storage_get_version_1] failed to allocate: %s", err)
 		ptr, _ := toWasmMemoryOptional(instanceContext, nil)
 		return C.int64_t(ptr)
 	}
@@ -1886,7 +1886,7 @@ func ext_storage_next_key_version_1(context unsafe.Pointer, keySpan C.int64_t) C
 
 	nextSpan, err := toWasmMemoryOptional(instanceContext, next)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_storage_next_key_version_1] failed to allocate: %s", err))
+		logger.Errorf("[ext_storage_next_key_version_1] failed to allocate: %s", err)
 		return 0
 	}
 
@@ -1924,7 +1924,7 @@ func ext_storage_read_version_1(context unsafe.Pointer, keySpan, valueOut C.int6
 
 	sizeSpan, err := toWasmMemoryOptionalUint32(instanceContext, &size)
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_storage_read_version_1] failed to allocate: %s", err))
+		logger.Errorf("[ext_storage_read_version_1] failed to allocate: %s", err)
 		return 0
 	}
 
@@ -1940,15 +1940,15 @@ func ext_storage_root_version_1(context unsafe.Pointer) C.int64_t {
 
 	root, err := storage.Root()
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_storage_root_version_1] failed to get storage root: %s", err))
+		logger.Errorf("[ext_storage_root_version_1] failed to get storage root: %s", err)
 		return 0
 	}
 
-	logger.Debug(fmt.Sprintf("[ext_storage_root_version_1] root hash is: %s", root))
+	logger.Debugf("[ext_storage_root_version_1] root hash is: %s", root)
 
 	rootSpan, err := toWasmMemory(instanceContext, root[:])
 	if err != nil {
-		logger.Error(fmt.Sprintf("[ext_storage_root_version_1] failed to allocate: %s", err))
+		logger.Errorf("[ext_storage_root_version_1] failed to allocate: %s", err)
 		return 0
 	}
 
